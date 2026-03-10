@@ -1,0 +1,6 @@
+BOAS PRATICAS
+├── index.html
+├── css/
+│   └── style.css
+├── js/
+│   └── game.js
