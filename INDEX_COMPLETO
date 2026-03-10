@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show do Milhão - Jogo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .fase {
+            background: #764ba2;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: bold;
+        }
+
+        .pontuacao {
+            font-size: 1.5rem;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .pergunta-container {
+            margin-bottom: 2rem;
+        }
+
+        .pergunta {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .opcoes {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .opcao {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+            color: #495057;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .opcao:hover:not(.disabled):not(.selecionada) {
+            background: #e9ecef;
+            border-color: #764ba2;
+            transform: translateX(5px);
+        }
+
+        .opcao.selecionada {
+            background: #667eea;
+            color: white;
+            border-color: #764ba2;
+            transform: translateX(10px);
+            box-shadow: -5px 5px 10px rgba(0,0,0,0.1);
+        }
+
+        .opcao.correta {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .opcao.errada {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .opcao.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .letra-opcao {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .opcao.selecionada .letra-opcao {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .opcao.correta .letra-opcao,
+        .opcao.errada .letra-opcao {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .botoes-acao {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .confirmar-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 2;
+            transition: all 0.3s;
+        }
+
+        .confirmar-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .confirmar-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #6c757d;
+        }
+
+        .cancelar-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .cancelar-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .proxima-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .proxima-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-screen h1 {
+            color: #764ba2;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem 3rem;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid white;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .resultado {
+            text-align: center;
+            font-size: 1.3rem;
+            margin: 2rem 0;
+            white-space: pre-line;
+            line-height: 2;
+        }
+
+        .resultado.sucesso {
+            color: #28a745;
+        }
+
+        .resultado.fracasso {
+            color: #dc3545;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .categoria {
+            display: inline-block;
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.3rem 1rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .instrucao {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="gameContainer">
+        <!-- Tela inicial -->
+        <div id="startScreen" class="start-screen">
+            <h1>🎯 SHOW DO MILHÃO</h1>
+            <button class="start-btn" onclick="iniciarJogo()">COMEÇAR JOGO</button>
+        </div>
+
+        <!-- Tela do jogo (inicialmente escondida) -->
+        <div id="gameScreen" style="display: none;">
+            <div class="header">
+                <div class="fase" id="faseAtual">Fase 1</div>
+                <div class="pontuacao" id="pontuacao">R$ 0</div>
+            </div>
+
+            <div class="pergunta-container">
+                <div class="categoria" id="categoria"></div>
+                <div class="pergunta" id="pergunta"></div>
+                <div class="opcoes" id="opcoes"></div>
+                <div class="instrucao" id="instrucao">Clique em uma alternativa e depois confirme</div>
+                
+                <div class="botoes-acao">
+                    <button class="confirmar-btn" id="confirmarBtn" onclick="confirmarResposta()" disabled>CONFIRMAR RESPOSTA</button>
+                    <button class="cancelar-btn" id="cancelarBtn" onclick="cancelarSelecao()" style="display: none;">CANCELAR</button>
+                    <button class="proxima-btn" id="proximaBtn" onclick="proximaPergunta()">PRÓXIMA</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Banco de perguntas expandido
+        const bancoPerguntas = [
+            // Geografia
+            {
+                categoria: "Geografia",
+                pergunta: "Qual é a capital do Brasil?",
+                opcoes: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"],
+                correta: 2,
+                valor: 1000
+            },
+            {
+                categoria: "Geografia",
+                pergunta: "Qual o maior país da América do Sul?",
+                opcoes: ["Argentina", "Brasil", "Colômbia", "Peru"],
+                correta: 1,
+                valor: 2000
+            },
+            {
+                categoria: "Geografia",
+                pergunta: "Qual oceano banha o Brasil?",
+                opcoes: ["Pacífico", "Índico", "Atlântico", "Ártico"],
+                correta: 2,
+                valor: 3000
+            },
+            {
+                categoria: "Geografia",
+                pergunta: "Qual a montanha mais alta do mundo?",
+                opcoes: ["Monte Everest", "K2", "Aconcágua", "Monte McKinley"],
+                correta: 0,
+                valor: 4000
+            },
+            
+            // Matemática
+            {
+                categoria: "Matemática",
+                pergunta: "Quanto é 7 x 8?",
+                opcoes: ["48", "56", "64", "72"],
+                correta: 1,
+                valor: 1000
+            },
+            {
+                categoria: "Matemática",
+                pergunta: "Qual a raiz quadrada de 144?",
+                opcoes: ["10", "11", "12", "13"],
+                correta: 2,
+                valor: 2000
+            },
+            {
+                categoria: "Matemática",
+                pergunta: "Quanto é 15% de 200?",
+                opcoes: ["15", "30", "45", "60"],
+                correta: 1,
+                valor: 3000
+            },
+            
+            // Literatura
+            {
+                categoria: "Literatura",
+                pergunta: "Quem escreveu 'Dom Casmurro'?",
+                opcoes: ["José de Alencar", "Machado de Assis", "Carlos Drummond", "Clarice Lispector"],
+                correta: 1,
+                valor: 1000
+            },
+            {
+                categoria: "Literatura",
+                pergunta: "Qual o livro mais vendido do mundo?",
+                opcoes: ["Dom Quixote", "Bíblia", "O Pequeno Príncipe", "Harry Potter"],
+                correta: 1,
+                valor: 4000
+            },
+            
+            // Ciências
+            {
+                categoria: "Ciências",
+                pergunta: "Qual o maior planeta do sistema solar?",
+                opcoes: ["Marte", "Saturno", "Júpiter", "Urano"],
+                correta: 2,
+                valor: 1000
+            },
+            {
+                categoria: "Ciências",
+                pergunta: "Qual animal é conhecido como 'Rei da Selva'?",
+                opcoes: ["Tigre", "Leão", "Elefante", "Girafa"],
+                correta: 1,
+                valor: 2000
+            },
+            {
+                categoria: "Ciências",
+                pergunta: "Quantos ossos tem o corpo humano adulto?",
+                opcoes: ["206", "208", "210", "212"],
+                correta: 0,
+                valor: 3000
+            },
+            
+            // História
+            {
+                categoria: "História",
+                pergunta: "Em que ano o homem pisou na Lua?",
+                opcoes: ["1965", "1969", "1972", "1975"],
+                correta: 1,
+                valor: 1000
+            },
+            {
+                categoria: "História",
+                pergunta: "Quem descobriu o Brasil?",
+                opcoes: ["Dom Pedro I", "Pedro Álvares Cabral", "Cristóvão Colombo", "Vasco da Gama"],
+                correta: 1,
+                valor: 2000
+            },
+            {
+                categoria: "História",
+                pergunta: "Em que ano terminou a Segunda Guerra Mundial?",
+                opcoes: ["1944", "1945", "1946", "1947"],
+                correta: 1,
+                valor: 4000
+            },
+            
+            // Cultura Geral
+            {
+                categoria: "Cultura Geral",
+                pergunta: "Qual a cor do cavalo branco de Napoleão?",
+                opcoes: ["Preto", "Marrom", "Branco", "Cinza"],
+                correta: 2,
+                valor: 5000
+            },
+            {
+                categoria: "Cultura Geral",
+                pergunta: "Quem pintou a Mona Lisa?",
+                opcoes: ["Van Gogh", "Picasso", "Leonardo da Vinci", "Michelangelo"],
+                correta: 2,
+                valor: 3000
+            },
+            {
+                categoria: "Cultura Geral",
+                pergunta: "Qual o nome do personagem principal do filme 'Titanic'?",
+                opcoes: ["Jack", "Rose", "Caledon", "Ruth"],
+                correta: 0,
+                valor: 2000
+            },
+            {
+                categoria: "Cultura Geral",
+                pergunta: "Quantas cordas tem um violão clássico?",
+                opcoes: ["4", "5", "6", "7"],
+                correta: 2,
+                valor: 3000
+            }
+        ];
+
+        let jogoAtivo = false;
+        let perguntasSelecionadas = [];
+        let perguntaAtual = 0;
+        let pontuacao = 0;
+        let respostaConfirmada = false;
+        let indiceSelecionado = -1;
+
+        function selecionarPerguntasAleatorias(quantidade = 5) {
+            // Embaralhar o banco de perguntas
+            const perguntasEmbaralhadas = [...bancoPerguntas].sort(() => Math.random() - 0.5);
+            
+            // Selecionar as primeiras 'quantidade' perguntas
+            const selecionadas = perguntasEmbaralhadas.slice(0, quantidade);
+            
+            // Atribuir fases baseadas na pontuação
+            return selecionadas.map((pergunta, index) => ({
+                ...pergunta,
+                fase: index + 1,
+                valor: Math.pow(10, index) * 1000 // Valores crescentes: 1000, 10000, 100000, etc.
+            }));
+        }
+
+        function iniciarJogo() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            jogoAtivo = true;
+            perguntaAtual = 0;
+            pontuacao = 0;
+            respostaConfirmada = false;
+            indiceSelecionado = -1;
+            
+            // Selecionar perguntas aleatórias para esta partida
+            perguntasSelecionadas = selecionarPerguntasAleatorias(5);
+            
+            carregarPergunta();
+        }
+
+        function carregarPergunta() {
+            const pergunta = perguntasSelecionadas[perguntaAtual];
+            document.getElementById('faseAtual').textContent = `Fase ${pergunta.fase}`;
+            document.getElementById('pontuacao').textContent = `R$ ${pontuacao.toLocaleString()}`;
+            document.getElementById('categoria').textContent = pergunta.categoria;
+            document.getElementById('pergunta').textContent = pergunta.pergunta;
+            document.getElementById('instrucao').textContent = "Clique em uma alternativa (pode trocar antes de confirmar)";
+            
+            const opcoesDiv = document.getElementById('opcoes');
+            opcoesDiv.innerHTML = '';
+            
+            const letras = ['A', 'B', 'C', 'D'];
+            pergunta.opcoes.forEach((opcao, index) => {
+                const botao = document.createElement('div');
+                botao.className = 'opcao';
+                botao.innerHTML = `<span class="letra-opcao">${letras[index]}</span> ${opcao}`;
+                botao.onclick = () => selecionarOpcao(index);
+                opcoesDiv.appendChild(botao);
+            });
+
+            document.getElementById('confirmarBtn').disabled = true;
+            document.getElementById('cancelarBtn').style.display = 'none';
+            document.getElementById('proximaBtn').style.display = 'none';
+            respostaConfirmada = false;
+            indiceSelecionado = -1;
+        }
+
+        function selecionarOpcao(index) {
+            if (respostaConfirmada || !jogoAtivo) return;
+
+            // Se clicou na mesma opção já selecionada, não faz nada
+            if (indiceSelecionado === index) return;
+
+            // Remover seleção anterior
+            const opcoes = document.querySelectorAll('.opcao');
+            opcoes.forEach(opcao => {
+                opcao.classList.remove('selecionada');
+            });
+
+            // Selecionar nova opção
+            opcoes[index].classList.add('selecionada');
+            indiceSelecionado = index;
+            
+            // Habilitar botões
+            document.getElementById('confirmarBtn').disabled = false;
+            document.getElementById('cancelarBtn').style.display = 'block';
+            document.getElementById('instrucao').textContent = "Alternativa selecionada. Confirme ou cancele para trocar.";
+        }
+
+        function cancelarSelecao() {
+            if (respostaConfirmada || !jogoAtivo) return;
+
+            // Remover seleção
+            const opcoes = document.querySelectorAll('.opcao');
+            opcoes.forEach(opcao => {
+                opcao.classList.remove('selecionada');
+            });
+
+            indiceSelecionado = -1;
+            
+            // Desabilitar botões
+            document.getElementById('confirmarBtn').disabled = true;
+            document.getElementById('cancelarBtn').style.display = 'none';
+            document.getElementById('instrucao').textContent = "Seleção cancelada. Escolha uma nova alternativa.";
+        }
+
+        function confirmarResposta() {
+            if (indiceSelecionado === -1 || respostaConfirmada || !jogoAtivo) return;
+
+            const pergunta = perguntasSelecionadas[perguntaAtual];
+            const opcoes = document.querySelectorAll('.opcao');
+            
+            respostaConfirmada = true;
+            
+            // Esconder botão cancelar
+            document.getElementById('cancelarBtn').style.display = 'none';
+            
+            // Marcar a resposta correta
+            opcoes[pergunta.correta].classList.add('correta');
+            
+            if (indiceSelecionado === pergunta.correta) {
+                // Resposta correta
+                pontuacao += pergunta.valor;
+                document.getElementById('pontuacao').textContent = `R$ ${pontuacao.toLocaleString()}`;
+                document.getElementById('instrucao').textContent = "Resposta correta! Parabéns!";
+                
+                if (perguntaAtual === perguntasSelecionadas.length - 1) {
+                    // Jogador venceu o jogo
+                    setTimeout(() => {
+                        alert(`PARABÉNS! Você chegou ao fim do jogo!\nPontuação final: R$ ${pontuacao.toLocaleString()}`);
+                        mostrarResultado('sucesso', `VOCÊ É UM MILIONÁRIO! 🎉\n\nPontuação final: R$ ${pontuacao.toLocaleString()}`);
+                    }, 500);
+                } else {
+                    // Mostrar botão próxima pergunta
+                    document.getElementById('proximaBtn').style.display = 'block';
+                }
+            } else {
+                // Resposta errada
+                opcoes[indiceSelecionado].classList.add('errada');
+                jogoAtivo = false;
+                document.getElementById('instrucao').textContent = "Resposta errada! Game Over!";
+                
+                // Mostrar resultado com a pontuação final
+                setTimeout(() => {
+                    mostrarResultado('fracasso', `GAME OVER! Você perdeu! 💔\n\nPontuação final: R$ ${pontuacao.toLocaleString()}`);
+                }, 500);
+            }
+
+            // Desabilitar botão de confirmar e todas as opções
+            document.getElementById('confirmarBtn').disabled = true;
+            opcoes.forEach(opcao => {
+                opcao.classList.add('disabled');
+            });
+        }
+
+        function proximaPergunta() {
+            if (perguntaAtual < perguntasSelecionadas.length - 1) {
+                perguntaAtual++;
+                carregarPergunta();
+            }
+        }
+
+        function mostrarResultado(tipo, mensagem) {
+            const gameScreen = document.getElementById('gameScreen');
+            const resultadoDiv = document.createElement('div');
+            resultadoDiv.className = `resultado ${tipo}`;
+            resultadoDiv.style.whiteSpace = 'pre-line';
+            resultadoDiv.textContent = mensagem;
+            
+            const voltarBtn = document.createElement('button');
+            voltarBtn.className = 'start-btn';
+            voltarBtn.textContent = 'JOGAR NOVAMENTE';
+            voltarBtn.onclick = () => {
+                document.location.reload();
+            };
+            
+            gameScreen.innerHTML = '';
+            gameScreen.appendChild(resultadoDiv);
+            gameScreen.appendChild(voltarBtn);
+        }
+    </script>
+</body>
+</html>
